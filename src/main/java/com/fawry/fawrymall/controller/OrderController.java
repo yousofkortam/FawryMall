@@ -43,6 +43,11 @@ public class OrderController {
         return orderService.createOrder(order);
     }
 
+    @PutMapping("/{id}")
+    public Order updateOrder(@PathVariable Long id, @Valid @RequestBody OrderDto order) {
+        return orderService.updateOrder(id, order);
+    }
+
     @DeleteMapping("/{id}")
     public void deleteOrder(@PathVariable Long id) {
         orderService.deleteOrder(id);
