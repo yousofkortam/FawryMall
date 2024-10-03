@@ -1,7 +1,6 @@
 package com.fawry.fawrymall.service.order;
 
 import com.fawry.fawrymall.dto.OrderDto;
-import com.fawry.fawrymall.dto.OrderItemDto;
 import com.fawry.fawrymall.entity.Merchant;
 import com.fawry.fawrymall.entity.Order;
 import com.fawry.fawrymall.entity.OrderItem;
@@ -18,8 +17,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -48,26 +47,27 @@ public class OrderServiceImpl implements OrderService {
         Merchant customer = merchantService.getMerchantById(order.customerId());
         Order newOrder = new Order();
 
-        List<OrderItem> orderItems = new LinkedList<>();
         newOrder.setMerchant(customer);
         newOrder.setDate(LocalDateTime.now());
         newOrder.setStatus(OrderStatus.PENDING);
 
-        double totalAmount = 0;
-        for (OrderItemDto item : order.items()) {
-            Product product = productService.getProductById(item.productId());
-            OrderItem orderItem = OrderItem.builder()
-                    .product(product)
-                    .quantity(item.quantity())
-                    .unitPrice(product.getPrice())
-                    .totalPrice(product.getPrice() * item.quantity())
-                    .order(newOrder)
-                    .build();
-            totalAmount += orderItem.getTotalPrice();
-            orderItems.add(orderItem);
-        }
+        double[] totalAmount = new double[1];
+        List<OrderItem> orderItems = order.items()
+                .parallelStream()
+                .map(item -> {
+                    Product product = productService.getProductById(item.productId());
+                    return OrderItem.builder()
+                            .product(product)
+                            .quantity(item.quantity())
+                            .unitPrice(product.getPrice())
+                            .totalPrice(product.getPrice() * item.quantity())
+                            .order(newOrder)
+                            .build();
+                }).peek((orderItem) -> totalAmount[0] += orderItem.getTotalPrice())
+                .collect(Collectors.toList());
+
         newOrder.setItems(orderItems);
-        newOrder.setTotalPrice(totalAmount);
+        newOrder.setTotalPrice(totalAmount[0]);
         return orderRepository.save(newOrder);
     }
 
