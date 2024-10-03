@@ -4,7 +4,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 public record ProductDto(
-        @NotNull(message = "Product name required")
         @NotBlank(message = "Product name required")
         String name,
         @NotNull(message = "Product price required")
