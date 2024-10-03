@@ -4,6 +4,7 @@ package com.fawry.fawrymall.exception;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -23,13 +24,11 @@ public class CustomExceptionHandler {
 
     private static final String DATE_TIME_FORMAT = "yyyy-MM-dd hh:mm:ss a";
 
-    @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<ExceptionMessage> entityNotFoundExceptionHandler(EntityNotFoundException e) {
-        return generateExceptionResponseEntity(e, HttpStatus.NOT_FOUND);
-    }
-
-    @ExceptionHandler(NoSuchElementException.class)
-    public ResponseEntity<ExceptionMessage> NoSuchElementExceptionHandler(NoSuchElementException e) {
+    @ExceptionHandler({
+            EntityNotFoundException.class,
+            NoSuchElementException.class
+    })
+    public ResponseEntity<ExceptionMessage> notFoundExceptionHandler(Exception e) {
         return generateExceptionResponseEntity(e, HttpStatus.NOT_FOUND);
     }
 
@@ -51,8 +50,12 @@ public class CustomExceptionHandler {
         return new ResponseEntity<>(exceptionValidationResponse, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ExceptionMessage> IllegalArgumentExceptionHandler(IllegalArgumentException e) {
+    @ExceptionHandler({
+            IllegalArgumentException.class,
+            MethodArgumentTypeMismatchException.class,
+            HttpMessageNotReadableException.class
+    })
+    public ResponseEntity<ExceptionMessage> requestExceptionHandler(Exception e) {
         return generateExceptionResponseEntity(e, HttpStatus.BAD_REQUEST);
     }
 
@@ -61,18 +64,9 @@ public class CustomExceptionHandler {
         return generateExceptionResponseEntity(e, HttpStatus.METHOD_NOT_ALLOWED);
     }
 
-    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<?> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException e) {
-        return generateExceptionResponseEntity(e, HttpStatus.BAD_REQUEST);
-    }
 
-    @ExceptionHandler(NullPointerException.class)
-    public ResponseEntity<ExceptionMessage> handleNullPointerException(NullPointerException e) {
-        return generateExceptionResponseEntity(e, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<?> handleAllExceptions(Exception e) {
+    @ExceptionHandler({NullPointerException.class, Exception.class})
+    public ResponseEntity<ExceptionMessage> handleNullPointerException(Exception e) {
         return generateExceptionResponseEntity(e, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
